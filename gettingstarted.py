@@ -121,12 +121,32 @@ def plot_embeddings(M_reduced, word2Ind, words):
             word2Ind (dict): dictionary that maps word to indices for matrix M
             words (list of strings): words whose embeddings we want to visualize
     """
-
-    # ------------------
-    # Write your implementation here.
-    plt.scatter(M_reduced[:,0], M_reduced[:,1])
+    # Get list of indices
+    words_index = list()
+    for word in words:
+        words_index.append(word2Ind[word])
+    # Pick out words from M_reduced to plot
+    words_to_plot = np.empty(shape=(len(words_index),2))
+    for i, index in enumerate(words_index):
+        words_to_plot[i] = M_reduced[index]
+    x = words_to_plot[:,0]
+    y = words_to_plot[:,1]
+    fig, ax = plt.subplots()
+    ax.scatter(words_to_plot[:,0], words_to_plot[:,1], marker='x', c='r')
+    for i, word in enumerate(words):
+        ax.annotate(word, (words_to_plot[i][0], words_to_plot[i][1]))
     plt.show()
-    # ------------------
+
+def load_word2vec():
+    """ Load Word2Vec Vectors
+        Return:
+            wv_from_bin: All 3 million embeddings, each lengh 300
+    """
+    import gensim.downloader as api
+    wv_from_bin = api.load("word2vec-google-news-300")
+    vocab = list(wv_from_bin.vocab.keys())
+    print("Loaded vocab size %i" % len(vocab))
+    return wv_from_bin
 
 def test_distinct_words():
     # Run to test distinct_words()
@@ -229,10 +249,16 @@ def test_plot_embeddings():
 ###########################################
 def main():
     # reuters_corpus = read_corpus()
-    # M, word2Ind = compute_co_occurrence_matrix(reuters_corpus)
-    # M_reduced = reduce_to_k_dim(M)
-    # print(M_reduced)
-    test_plot_embeddings()
+    # M_co_occurrence, word2Ind_co_occurrence = compute_co_occurrence_matrix(reuters_corpus)
+    # M_reduced_co_occurrence = reduce_to_k_dim(M_co_occurrence, k=2)
+    #
+    # # Rescale (normalize) the rows to make them each of unit-length
+    # M_lengths = np.linalg.norm(M_reduced_co_occurrence, axis=1)
+    # M_normalized = M_reduced_co_occurrence / M_lengths[:, np.newaxis] # broadcasting
+    #
+    # words = ['barrels', 'bpd', 'ecuador', 'energy', 'industry', 'kuwait', 'oil', 'output', 'petroleum', 'venezuela']
+    # plot_embeddings(M_normalized, word2Ind_co_occurrence, words)
+    wv_from_bin = load_word2vec()
 
 ###########################################
 if __name__ == '__main__':
