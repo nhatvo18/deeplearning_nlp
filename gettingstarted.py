@@ -148,6 +148,41 @@ def load_word2vec():
     print("Loaded vocab size %i" % len(vocab))
     return wv_from_bin
 
+def get_matrix_of_vectors(wv_from_bin, required_words=['barrels', 'bpd', 'ecuador', 'energy', 'industry', 'kuwait', 'oil', 'output', 'petroleum', 'venezuela']):
+    """ Put the word2vec vectors into a matrix M.
+        Param:
+            wv_from_bin: KeyedVectors object; the 3 million word2vec vectors loaded from file
+        Return:
+            M: numpy matrix shape (num words, 300) containing the vectors
+            word2Ind: dictionary mapping each word to its row number in M
+    """
+    import random
+    words = list(wv_from_bin.vocab.keys())
+    print("Shuffling words ...")
+    random.shuffle(words)
+    words = words[:10000]
+    print("Putting %i words into word2Ind and matrix M..." % len(words))
+    word2Ind = {}
+    M = []
+    curInd = 0
+    for w in words:
+        try:
+            M.append(wv_from_bin.word_vec(w))
+            word2Ind[w] = curInd
+            curInd += 1
+        except KeyError:
+            continue
+    for w in required_words:
+        try:
+            M.append(wv_from_bin.word_vec(w))
+            word2Ind[w] = curInd
+            curInd += 1
+        except KeyError:
+            continue
+    M = np.stack(M)
+    print("Done.")
+    return M, word2Ind
+
 def test_distinct_words():
     # Run to test distinct_words()
 
@@ -258,8 +293,12 @@ def main():
     #
     # words = ['barrels', 'bpd', 'ecuador', 'energy', 'industry', 'kuwait', 'oil', 'output', 'petroleum', 'venezuela']
     # plot_embeddings(M_normalized, word2Ind_co_occurrence, words)
-    wv_from_bin = load_word2vec()
 
+    wv_from_bin = load_word2vec()
+    M, word2Ind = get_matrix_of_vectors(wv_from_bin)
+    M_reduced = reduce_to_k_dim(M, k=2)
+    words = ['barrels', 'bpd', 'ecuador', 'energy', 'industry', 'kuwait', 'oil', 'output', 'petroleum', 'venezuela']
+    plot_embeddings(M_reduced, word2Ind, words)
 ###########################################
 if __name__ == '__main__':
     main()
